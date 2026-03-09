@@ -1,0 +1,84 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.6.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.web",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "ami": "ami-0c55b159cbfafe1f0",
+            "instance_type": "t3.medium",
+            "tags": { "Name": "costnova-web", "Environment": "staging", "Client": "costnova" }
+          }
+        },
+        {
+          "address": "aws_db_instance.main",
+          "mode": "managed",
+          "type": "aws_db_instance",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "allocated_storage": 100,
+            "engine": "postgres",
+            "engine_version": "15.3",
+            "instance_class": "db.t3.medium",
+            "db_name": "costnova",
+            "username": "admin",
+            "multi_az": false,
+            "tags": { "Name": "costnova-db", "Environment": "staging", "Client": "costnova" }
+          }
+        },
+        {
+          "address": "aws_s3_bucket.storage",
+          "mode": "managed",
+          "type": "aws_s3_bucket",
+          "name": "storage",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "values": {
+            "bucket": "costnova-storage-staging",
+            "tags": { "Name": "costnova-storage", "Environment": "staging", "Client": "costnova" }
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_instance.web",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": { "actions": ["create"], "before": null, "after": { "ami": "ami-0c55b159cbfafe1f0", "instance_type": "t3.medium" } }
+    },
+    {
+      "address": "aws_db_instance.main",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": { "actions": ["create"], "before": null, "after": { "allocated_storage": 100, "instance_class": "db.t3.medium", "engine": "postgres" } }
+    },
+    {
+      "address": "aws_s3_bucket.storage",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "storage",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": { "actions": ["create"], "before": null, "after": { "bucket": "costnova-storage-staging" } }
+    }
+  ],
+  "configuration": {
+    "provider_config": {
+      "aws": { "name": "aws", "expressions": { "region": { "constant_value": "us-east-1" } } }
+    }
+  }
+}
