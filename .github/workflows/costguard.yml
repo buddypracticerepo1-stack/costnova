@@ -1,76 +1,28 @@
-# CostGuard CI/CD — Real Pipeline Demo
-# Posts a single cost analysis comment to the PR (auto-updates on re-push)
-
 name: CostGuard Cost Review
 
 on:
   pull_request:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: write
 
 jobs:
-  costguard-review:
-    name: CostGuard Validation
+  costguard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install CostGuard CLI
-        run: pip install costguard-cli
-
-      - name: Run CostGuard Validation
+      - name: CostGuard Validation
         env:
           COSTGUARD_API_KEY: ${{ secrets.COSTGUARD_API_KEY }}
           COSTGUARD_API_URL: ${{ secrets.COSTGUARD_API_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          pip install -q costguard-cli
           costguard-validate \
             --plan terraform/plan.json \
             --budget-code CS-FY2026-BU105-M03 \
             --format terminal \
-            --post-comment \
-            --cache-path costguard-result.json \
-            --output-file costguard-report.html
-        continue-on-error: true
-
-      - name: Upload Cost Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: costguard-report
-          path: |
-            costguard-result.json
-            costguard-report.html
-          retention-days: 30
-
-      - name: Check Decision
-        if: always()
-        run: |
-          if [ ! -f costguard-result.json ]; then
-            echo "::error::No CostGuard result found"
-            exit 1
-          fi
-          DECISION=$(python3 -c "
-          import json
-          with open('costguard-result.json') as f:
-              r = json.load(f)
-          d = r.get('endpoint_data', r).get('decision', 'ERROR')
-          print(d)
-          ")
-          echo "CostGuard Decision: $DECISION"
-
-          if [ "$DECISION" = "BLOCK" ]; then
-            echo "::error::CostGuard BLOCKED this deployment."
-            exit 1
-          elif [ "$DECISION" = "WARN" ]; then
-            echo "::warning::CostGuard issued a WARNING."
-          elif [ "$DECISION" = "ALLOW" ]; then
-            echo "CostGuard APPROVED this deployment."
-          else
-            echo "::error::CostGuard returned an error."
-            exit 1
-          fi
+            --post-comment
