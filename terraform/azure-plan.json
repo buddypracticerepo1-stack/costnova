@@ -1,0 +1,103 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.6.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "azurerm_linux_virtual_machine.web",
+          "mode": "managed",
+          "type": "azurerm_linux_virtual_machine",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hashicorp/azurerm",
+          "schema_version": 0,
+          "values": {
+            "name": "costnova-web-vm",
+            "resource_group_name": "costnova-staging-rg",
+            "location": "eastus",
+            "size": "Standard_B2s",
+            "admin_username": "adminuser",
+            "os_disk": {
+              "caching": "ReadWrite",
+              "storage_account_type": "Standard_LRS",
+              "disk_size_gb": 30
+            },
+            "source_image_reference": {
+              "publisher": "Canonical",
+              "offer": "0001-com-ubuntu-server-jammy",
+              "sku": "22_04-lts",
+              "version": "latest"
+            },
+            "tags": { "Name": "costnova-web", "Environment": "staging", "Client": "costnova" }
+          }
+        },
+        {
+          "address": "azurerm_postgresql_flexible_server.main",
+          "mode": "managed",
+          "type": "azurerm_postgresql_flexible_server",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/azurerm",
+          "schema_version": 0,
+          "values": {
+            "name": "costnova-db-server",
+            "resource_group_name": "costnova-staging-rg",
+            "location": "eastus",
+            "sku_name": "B_Standard_B2s",
+            "storage_mb": 32768,
+            "version": "15",
+            "administrator_login": "adminuser",
+            "zone": "1",
+            "tags": { "Name": "costnova-db", "Environment": "staging", "Client": "costnova" }
+          }
+        },
+        {
+          "address": "azurerm_storage_account.storage",
+          "mode": "managed",
+          "type": "azurerm_storage_account",
+          "name": "storage",
+          "provider_name": "registry.terraform.io/hashicorp/azurerm",
+          "schema_version": 0,
+          "values": {
+            "name": "costnovastaging",
+            "resource_group_name": "costnova-staging-rg",
+            "location": "eastus",
+            "account_tier": "Standard",
+            "account_replication_type": "LRS",
+            "tags": { "Name": "costnova-storage", "Environment": "staging", "Client": "costnova" }
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "azurerm_linux_virtual_machine.web",
+      "mode": "managed",
+      "type": "azurerm_linux_virtual_machine",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hashicorp/azurerm",
+      "change": { "actions": ["create"], "before": null, "after": { "size": "Standard_B2s", "location": "eastus" } }
+    },
+    {
+      "address": "azurerm_postgresql_flexible_server.main",
+      "mode": "managed",
+      "type": "azurerm_postgresql_flexible_server",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/azurerm",
+      "change": { "actions": ["create"], "before": null, "after": { "sku_name": "B_Standard_B2s", "storage_mb": 32768, "location": "eastus" } }
+    },
+    {
+      "address": "azurerm_storage_account.storage",
+      "mode": "managed",
+      "type": "azurerm_storage_account",
+      "name": "storage",
+      "provider_name": "registry.terraform.io/hashicorp/azurerm",
+      "change": { "actions": ["create"], "before": null, "after": { "account_tier": "Standard", "account_replication_type": "LRS", "location": "eastus" } }
+    }
+  ],
+  "configuration": {
+    "provider_config": {
+      "azurerm": { "name": "azurerm", "expressions": { "features": {} } }
+    }
+  }
+}
