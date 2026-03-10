@@ -25,4 +25,17 @@ jobs:
             --plan terraform/plan.json \
             --budget-code CS-FY2026-BU105-M03 \
             --format terminal \
-            --post-comment
+            --post-comment \
+            --cache-path costguard-result.json
+          costguard-validate \
+            --cached costguard-result.json \
+            --format html \
+            --output-file costguard-report.html
+
+      - name: Upload Cost Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: costguard-report
+          path: costguard-report.html
+          retention-days: 30
