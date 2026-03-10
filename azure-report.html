@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CostGuard — Infrastructure Cost Analysis</title>
+<style>
+  /* ── CSS Custom Properties ─────────────────────────────────────── */
+  :root {
+    --navy:       #0f172a;
+    --slate-800:  #1e293b;
+    --slate-700:  #334155;
+    --slate-600:  #475569;
+    --slate-500:  #64748b;
+    --slate-400:  #94a3b8;
+    --slate-300:  #cbd5e1;
+    --slate-200:  #e2e8f0;
+    --slate-100:  #f1f5f9;
+    --slate-50:   #f8fafc;
+    --white:      #ffffff;
+
+    --accent:     #3b82f6;
+    --accent-light: #dbeafe;
+    --accent-dark: #1d4ed8;
+
+    --green:      #10b981;
+    --green-light: #d1fae5;
+    --green-dark: #059669;
+
+    --amber:      #f59e0b;
+    --amber-light: #fef3c7;
+    --amber-dark: #d97706;
+
+    --red:        #ef4444;
+    --red-light:  #fee2e2;
+    --red-dark:   #dc2626;
+
+    --gray:       #6b7280;
+    --gray-light: #f3f4f6;
+
+    --radius-sm:  6px;
+    --radius-md:  10px;
+    --radius-lg:  14px;
+
+    --shadow-sm:  0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+
+    --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                  'Helvetica Neue', Arial, sans-serif;
+    --font-mono:  'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code',
+                  Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+
+  /* ── Reset & Base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--slate-700);
+    background: var(--slate-100);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  /* ── Page Header ───────────────────────────────────────────────── */
+  .page-header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--slate-800) 50%, var(--slate-700) 100%);
+    color: var(--white);
+    padding: 40px 0 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .page-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+    position: relative;
+    z-index: 1;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(59,130,246,0.2);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .brand-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--accent);
+  }
+  .brand-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--slate-300);
+  }
+  .brand-text span {
+    color: var(--accent);
+  }
+  .header-title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+  .header-subtitle {
+    font-size: 14px;
+    color: var(--slate-400);
+    margin-bottom: 20px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    color: var(--slate-400);
+  }
+  .header-meta span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .header-meta svg {
+    width: 13px;
+    height: 13px;
+    fill: var(--slate-500);
+  }
+
+  /* ── Decision Banner ───────────────────────────────────────────── */
+  .decision-strip {
+    max-width: 1080px;
+    margin: -28px auto 0;
+    padding: 0 32px;
+    position: relative;
+    z-index: 2;
+  }
+  .decision-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .decision-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .decision-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--white);
+  }
+  .decision-badge svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+  .decision-ALLOW  { background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%); }
+  .decision-WARN   { background: linear-gradient(135deg, var(--amber) 0%, var(--amber-dark) 100%); }
+  .decision-BLOCK  { background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%); }
+  .decision-ERROR  { background: linear-gradient(135deg, var(--gray) 0%, var(--slate-600) 100%); }
+  .decision-label {
+    font-size: 14px;
+    color: var(--slate-600);
+    font-weight: 500;
+  }
+  .decision-cost {
+    text-align: right;
+  }
+  .decision-cost .cost-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--navy);
+    letter-spacing: -0.5px;
+    font-family: var(--font-mono);
+  }
+  .decision-cost .cost-label {
+    font-size: 12px;
+    color: var(--slate-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Content Container ─────────────────────────────────────────── */
+  .content {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 28px 32px 48px;
+  }
+
+  /* ── Stat Cards Grid ───────────────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    border: 1px solid var(--slate-200);
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stat-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .stat-icon.blue   { background: var(--accent-light); }
+  .stat-icon.blue svg { fill: var(--accent); }
+  .stat-icon.green  { background: var(--green-light); }
+  .stat-icon.green svg { fill: var(--green); }
+  .stat-icon.amber  { background: var(--amber-light); }
+  .stat-icon.amber svg { fill: var(--amber); }
+  .stat-icon.red    { background: var(--red-light); }
+  .stat-icon.red svg { fill: var(--red); }
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--navy);
+    font-family: var(--font-mono);
+    line-height: 1.2;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--slate-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* ── Section Card ──────────────────────────────────────────────── */
+  .section {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--slate-200);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--slate-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--slate-400);
+  }
+  .section-badge {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .badge-neutral {
+    background: var(--slate-100);
+    color: var(--slate-600);
+  }
+  .badge-success {
+    background: var(--green-light);
+    color: var(--green-dark);
+  }
+  .badge-warning {
+    background: var(--amber-light);
+    color: var(--amber-dark);
+  }
+  .badge-danger {
+    background: var(--red-light);
+    color: var(--red-dark);
+  }
+  .section-body {
+    padding: 20px 24px;
+  }
+
+  /* ── Resource Table ────────────────────────────────────────────── */
+  .resource-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .resource-table thead th {
+    background: var(--slate-50);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    color: var(--slate-500);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--slate-200);
+    white-space: nowrap;
+  }
+  .resource-table tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--slate-100);
+    color: var(--slate-700);
+    vertical-align: middle;
+  }
+  .resource-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .resource-table tbody tr:hover td {
+    background: var(--slate-50);
+  }
+  .resource-table .resource-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--navy);
+  }
+  .resource-table .resource-type {
+    font-size: 12px;
+    color: var(--slate-500);
+  }
+  .resource-table .cost-cell {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .resource-table .cost-cell.monthly {
+    color: var(--navy);
+    font-size: 14px;
+  }
+  .resource-table .cost-cell.hourly {
+    color: var(--slate-400);
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .resource-table tfoot td {
+    padding: 12px 14px;
+    font-weight: 700;
+    border-top: 2px solid var(--slate-200);
+    background: var(--slate-50);
+    color: var(--navy);
+  }
+  .resource-table tfoot .cost-cell {
+    font-size: 15px;
+  }
+  .region-tag {
+    display: inline-block;
+    background: var(--slate-100);
+    color: var(--slate-600);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+  .provider-tag {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Budget Section ────────────────────────────────────────────── */
+  .budget-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .budget-visual {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .progress-track {
+    background: var(--slate-100);
+    border-radius: 12px;
+    height: 20px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.6s ease;
+    position: relative;
+  }
+  .progress-fill.green  { background: linear-gradient(90deg, #34d399, var(--green)); }
+  .progress-fill.amber  { background: linear-gradient(90deg, #fbbf24, var(--amber-dark)); }
+  .progress-fill.red    { background: linear-gradient(90deg, #f87171, var(--red-dark)); }
+  .progress-label {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--white);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .progress-markers {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--slate-400);
+  }
+  .budget-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .budget-metric {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+  }
+  .budget-metric .metric-label {
+    font-size: 11px;
+    color: var(--slate-500);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+  .budget-metric .metric-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--navy);
+  }
+  .budget-metric .metric-value.positive { color: var(--green); }
+  .budget-metric .metric-value.negative { color: var(--red); }
+  .budget-metric .metric-value.warning  { color: var(--amber-dark); }
+
+  /* ── Violations ────────────────────────────────────────────────── */
+  .guardrail-summary {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: var(--slate-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--slate-200);
+  }
+  .guardrail-stat {
+    text-align: center;
+    flex: 1;
+  }
+  .guardrail-stat .gs-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+  .guardrail-stat .gs-label {
+    font-size: 11px;
+    color: var(--slate-500);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .gs-value.text-green  { color: var(--green); }
+  .gs-value.text-red    { color: var(--red); }
+  .gs-value.text-navy   { color: var(--navy); }
+
+  .violation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .violation-card {
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--slate-200);
+    border-left: 4px solid;
+    background: var(--white);
+    transition: box-shadow 0.2s;
+  }
+  .violation-card:hover {
+    box-shadow: var(--shadow-sm);
+  }
+  .violation-card.sev-high   { border-left-color: var(--red); background: #fef8f8; }
+  .violation-card.sev-medium { border-left-color: var(--amber); background: #fffdf7; }
+  .violation-card.sev-low    { border-left-color: var(--accent); background: #f8faff; }
+  .violation-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .sev-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .sev-tag.high   { background: var(--red-light); color: var(--red-dark); }
+  .sev-tag.medium { background: var(--amber-light); color: var(--amber-dark); }
+  .sev-tag.low    { background: var(--accent-light); color: var(--accent-dark); }
+  .violation-rule {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--navy);
+    font-family: var(--font-mono);
+  }
+  .violation-msg {
+    font-size: 13px;
+    color: var(--slate-600);
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .violation-resource {
+    font-size: 12px;
+    color: var(--slate-500);
+  }
+  .violation-resource code {
+    background: var(--slate-100);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--slate-700);
+  }
+  .violation-rec {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--green-light);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--green-dark);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .violation-rec svg {
+    width: 14px;
+    height: 14px;
+    fill: var(--green);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── AI Analysis ───────────────────────────────────────────────── */
+  .ai-block {
+    background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%);
+    border: 1px solid #e0e7ff;
+    border-left: 4px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--slate-700);
+    white-space: pre-wrap;
+    position: relative;
+  }
+  .ai-block::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: -4px;
+    width: 4px;
+    height: 24px;
+    background: var(--accent-dark);
+    border-radius: 0 2px 2px 0;
+  }
+  .ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .ai-badge svg {
+    width: 12px;
+    height: 12px;
+    fill: var(--accent);
+  }
+
+  /* ── Remediation Table ─────────────────────────────────────────── */
+  .remediation-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .remediation-table thead th {
+    background: var(--slate-50);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    color: var(--slate-500);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--slate-200);
+  }
+  .remediation-table tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--slate-100);
+    vertical-align: middle;
+  }
+  .remediation-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .priority-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .priority-num.p-high   { background: var(--red); }
+  .priority-num.p-medium { background: var(--amber); }
+  .priority-num.p-low    { background: var(--accent); }
+
+  /* ── Savings Projection ────────────────────────────────────────── */
+  .savings-comparison {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  .savings-box {
+    padding: 24px;
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+  .savings-current {
+    background: var(--red-light);
+    border: 1px solid #fecaca;
+  }
+  .savings-optimized {
+    background: var(--green-light);
+    border: 1px solid #a7f3d0;
+  }
+  .savings-amount {
+    font-size: 28px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    letter-spacing: -0.5px;
+  }
+  .savings-current .savings-amount { color: var(--red-dark); }
+  .savings-optimized .savings-amount { color: var(--green-dark); }
+  .savings-desc {
+    font-size: 12px;
+    color: var(--slate-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+  .savings-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .savings-arrow svg {
+    width: 28px;
+    height: 28px;
+    fill: var(--green);
+  }
+  .savings-pct {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green-dark);
+    font-family: var(--font-mono);
+  }
+
+  /* ── Errors ────────────────────────────────────────────────────── */
+  .error-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .error-item {
+    padding: 10px 14px;
+    background: var(--red-light);
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--red-dark);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .error-item svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--red);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .page-footer {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px 32px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--slate-200);
+    font-size: 12px;
+    color: var(--slate-400);
+  }
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .footer-brand svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--slate-400);
+  }
+  .footer-brand strong {
+    color: var(--slate-600);
+  }
+  .footer-meta {
+    display: flex;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  /* ── Responsive ────────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .budget-overview { grid-template-columns: 1fr; }
+    .savings-comparison { grid-template-columns: 1fr; }
+    .savings-arrow { transform: rotate(90deg); }
+    .decision-card { flex-direction: column; text-align: center; }
+    .decision-cost { text-align: center; }
+    .page-footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+
+  /* ── Print ─────────────────────────────────────────────────────── */
+  @media print {
+    body { background: var(--white); font-size: 12px; }
+    .page-header { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section, .stat-card { box-shadow: none; border: 1px solid var(--slate-300); }
+    .decision-card { box-shadow: none; border: 1px solid var(--slate-300); }
+    .stat-card:hover, .violation-card:hover { transform: none; box-shadow: none; }
+    .decision-badge, .sev-tag, .priority-num, .progress-fill, .provider-tag {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page-footer { border-top: 1px solid var(--slate-300); }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ══════ Page Header ══════ -->
+  <div class="page-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        </div>
+        <div class="brand-text"><span>COST</span>GUARD by SKYXOPS</div>
+      </div>
+      <div class="header-title">Infrastructure Cost Analysis</div>
+      <div class="header-subtitle">Shift-left cost governance for cloud infrastructure</div>
+      <div class="header-meta">
+        
+        <span>
+          <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+          2026-03-10T12:29:54.640967+00:00
+        </span>
+        
+        
+        
+        <span>
+          <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+          eb77b992-2238-4f68-a1c4-9f901d3a896e
+        </span>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ Decision Strip ══════ -->
+  <div class="decision-strip">
+    <div class="decision-card">
+      <div class="decision-left">
+        <div class="decision-badge decision-ALLOW">
+          
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          
+          ALLOW
+        </div>
+        <div class="decision-label">
+          Deployment permitted
+          
+        </div>
+      </div>
+      <div class="decision-cost">
+        <div class="cost-value">$36.21</div>
+        <div class="cost-label">Estimated Monthly Cost (USD)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ Content ══════ -->
+  <div class="content">
+
+    <!-- ── Stat Cards ── -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon blue">
+            <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value">$36.21</div>
+        <div class="stat-label">Monthly Cost</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon green">
+            <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value">3</div>
+        <div class="stat-label">Resources Analyzed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon green">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value">True/0</div>
+        <div class="stat-label">Guardrails Passed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon green">
+            <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          </div>
+        </div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Violations</div>
+      </div>
+    </div>
+
+    <!-- ── Resource Breakdown ── -->
+    
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <svg viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+          Per-Resource Cost Breakdown
+        </div>
+        <span class="section-badge badge-neutral">3 resources</span>
+      </div>
+      <table class="resource-table">
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th>Type</th>
+            <th>Provider</th>
+            <th>Region</th>
+            <th style="text-align:right">Hourly</th>
+            <th style="text-align:right">Monthly</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td class="resource-name">azurerm_linux_virtual_machine.web</td>
+            <td class="resource-type">azurerm_linux_virtual_machine</td>
+            <td><span class="provider-tag">AZURE</span></td>
+            <td><span class="region-tag">eastus</span></td>
+            <td class="cost-cell hourly">$0.0488</td>
+            <td class="cost-cell monthly">$35.65</td>
+          </tr>
+          
+          <tr>
+            <td class="resource-name">azurerm_postgresql_flexible_server.main</td>
+            <td class="resource-type">azurerm_postgresql_flexible_server</td>
+            <td><span class="provider-tag">AZURE</span></td>
+            <td><span class="region-tag">eastus</span></td>
+            <td class="cost-cell hourly">$0.0000</td>
+            <td class="cost-cell monthly">$0.00</td>
+          </tr>
+          
+          <tr>
+            <td class="resource-name">azurerm_storage_account.storage</td>
+            <td class="resource-type">azurerm_storage_account</td>
+            <td><span class="provider-tag">AZURE</span></td>
+            <td><span class="region-tag">eastus</span></td>
+            <td class="cost-cell hourly">$0.0008</td>
+            <td class="cost-cell monthly">$0.56</td>
+          </tr>
+          
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5"><strong>Total Estimated Monthly Cost</strong></td>
+            <td class="cost-cell monthly">$36.21</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    
+
+    <!-- ── Budget Status ── -->
+    
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+          Budget: CloudScale Solutions January 2026 Budget
+        </div>
+        <span class="section-badge badge-success">
+          0% consumed
+        </span>
+      </div>
+      <div class="section-body">
+        <div class="budget-overview">
+          <div class="budget-visual">
+            <div class="progress-track">
+              <div class="progress-fill green" style="width: 0%;">
+                
+              </div>
+            </div>
+            <div class="progress-markers">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
+          <div class="budget-metrics">
+            
+            
+            
+            <div class="budget-metric">
+              <div class="metric-label">Available Headroom</div>
+              <div class="metric-value positive">$441,978.87</div>
+            </div>
+            
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- ── Guardrail Violations ── -->
+    
+
+    <!-- ── AI Analysis ── -->
+    
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          AI Analysis
+        </div>
+        <span class="ai-badge">
+          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Powered by AI
+        </span>
+      </div>
+      <div class="section-body">
+        <div class="ai-block">Here is the cost analysis narrative in HTML format:
+
+
+  Cost Analysis Summary
+  Decision: ALLOW
+  Total Monthly Cost: $36.21
+
+
+
+  Top Cost Drivers
+  
+    azurerm_linux_virtual_machine.web: $35.65
+    azurerm_storage_account.storage: $0.56
+    azurerm_postgresql_flexible_server.main: $0.00
+  
+
+
+
+  Recommendation
+  The analysis shows the majority of costs are coming from the Linux virtual machine, which accounts for $35.65 per month. Consider optimizing the VM size or shutting it down when not in use to reduce costs. The other resources have minimal impact on the overall spend.</div>
+      </div>
+    </div>
+    
+
+    <!-- ── Remediation Priority ── -->
+    
+
+    <!-- ── Savings Projection ── -->
+    
+
+    <!-- ── Errors ── -->
+    
+
+  </div>
+
+  <!-- ══════ Footer ══════ -->
+  <div class="page-footer">
+    <div class="footer-brand">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      Generated by <strong>CostGuard</strong> &mdash; <strong>SKYXOPS</strong> Shift-Left Cost Governance
+    </div>
+    <div class="footer-meta">
+      <span>eb77b992-2238-4f68-a1c4-9f901d3a896e</span>
+      
+    </div>
+  </div>
+
+</body>
+</html>
