@@ -1,50 +1,104 @@
 {
   "format_version": "1.2",
-  "terraform_version": "1.6.0",
+  "terraform_version": "1.7.5",
+  "variables": {
+    "region": { "value": "us-east-1" },
+    "instance_type": { "value": "m5.4xlarge" },
+    "instance_count": { "value": 3 },
+    "ami_id": { "value": "ami-0c55b159cbfafe1f0" }
+  },
   "planned_values": {
     "root_module": {
       "resources": [
         {
-          "address": "aws_instance.web",
+          "address": "aws_security_group.wide_open",
+          "mode": "managed",
+          "type": "aws_security_group",
+          "name": "wide_open",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 1,
+          "values": {
+            "name": "cloudnova-wide-open-sg",
+            "description": "INSECURE: All ports open to the internet",
+            "ingress": [
+              {
+                "cidr_blocks": ["0.0.0.0/0"],
+                "from_port": 0,
+                "to_port": 65535,
+                "protocol": "tcp",
+                "description": "All traffic from anywhere"
+              },
+              {
+                "cidr_blocks": ["0.0.0.0/0"],
+                "from_port": 0,
+                "to_port": 65535,
+                "protocol": "udp",
+                "description": "All UDP from anywhere"
+              }
+            ],
+            "egress": [
+              {
+                "cidr_blocks": ["0.0.0.0/0"],
+                "from_port": 0,
+                "to_port": 0,
+                "protocol": "-1"
+              }
+            ],
+            "tags": null
+          }
+        },
+        {
+          "address": "aws_instance.overprovisioned[0]",
           "mode": "managed",
           "type": "aws_instance",
-          "name": "web",
+          "name": "overprovisioned",
+          "index": 0,
           "provider_name": "registry.terraform.io/hashicorp/aws",
           "schema_version": 1,
           "values": {
             "ami": "ami-0c55b159cbfafe1f0",
-            "instance_type": "t3.medium",
-            "tags": { "Name": "costnova-web", "Environment": "staging", "Client": "costnova" }
+            "instance_type": "m5.4xlarge",
+            "availability_zone": "us-east-1a",
+            "tags": { "Name": "cloudnova-bloated-1" },
+            "root_block_device": [
+              { "volume_size": 100, "volume_type": "gp3", "encrypted": false }
+            ]
           }
         },
         {
-          "address": "aws_db_instance.main",
+          "address": "aws_instance.overprovisioned[1]",
           "mode": "managed",
-          "type": "aws_db_instance",
-          "name": "main",
+          "type": "aws_instance",
+          "name": "overprovisioned",
+          "index": 1,
           "provider_name": "registry.terraform.io/hashicorp/aws",
           "schema_version": 1,
           "values": {
-            "allocated_storage": 100,
-            "engine": "postgres",
-            "engine_version": "15.3",
-            "instance_class": "db.t3.medium",
-            "db_name": "costnova",
-            "username": "admin",
-            "multi_az": false,
-            "tags": { "Name": "costnova-db", "Environment": "staging", "Client": "costnova" }
+            "ami": "ami-0c55b159cbfafe1f0",
+            "instance_type": "m5.4xlarge",
+            "availability_zone": "us-east-1a",
+            "tags": { "Name": "cloudnova-bloated-2" },
+            "root_block_device": [
+              { "volume_size": 100, "volume_type": "gp3", "encrypted": false }
+            ]
           }
         },
         {
-          "address": "aws_s3_bucket.storage",
+          "address": "aws_instance.overprovisioned[2]",
           "mode": "managed",
-          "type": "aws_s3_bucket",
-          "name": "storage",
+          "type": "aws_instance",
+          "name": "overprovisioned",
+          "index": 2,
           "provider_name": "registry.terraform.io/hashicorp/aws",
-          "schema_version": 0,
+          "schema_version": 1,
           "values": {
-            "bucket": "costnova-storage-staging",
-            "tags": { "Name": "costnova-storage", "Environment": "staging", "Client": "costnova" }
+            "ami": "ami-0c55b159cbfafe1f0",
+            "instance_type": "m5.4xlarge",
+            "availability_zone": "us-east-1a",
+            "tags": { "Name": "cloudnova-bloated-3" },
+            "root_block_device": [
+              { "volume_size": 100, "volume_type": "gp3", "encrypted": false }
+            ]
           }
         }
       ]
@@ -52,33 +106,212 @@
   },
   "resource_changes": [
     {
-      "address": "aws_instance.web",
+      "address": "aws_security_group.wide_open",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "wide_open",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "name": "cloudnova-wide-open-sg",
+          "description": "INSECURE: All ports open to the internet",
+          "ingress": [
+            {
+              "cidr_blocks": ["0.0.0.0/0"],
+              "from_port": 0,
+              "to_port": 65535,
+              "protocol": "tcp"
+            },
+            {
+              "cidr_blocks": ["0.0.0.0/0"],
+              "from_port": 0,
+              "to_port": 65535,
+              "protocol": "udp"
+            }
+          ],
+          "egress": [
+            {
+              "cidr_blocks": ["0.0.0.0/0"],
+              "from_port": 0,
+              "to_port": 0,
+              "protocol": "-1"
+            }
+          ],
+          "tags": null,
+          "vpc_id": null
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "owner_id": true,
+          "vpc_id": true
+        }
+      }
+    },
+    {
+      "address": "aws_instance.overprovisioned[0]",
       "mode": "managed",
       "type": "aws_instance",
-      "name": "web",
+      "name": "overprovisioned",
+      "index": 0,
       "provider_name": "registry.terraform.io/hashicorp/aws",
-      "change": { "actions": ["create"], "before": null, "after": { "ami": "ami-0c55b159cbfafe1f0", "instance_type": "t3.medium" } }
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-0c55b159cbfafe1f0",
+          "instance_type": "m5.4xlarge",
+          "availability_zone": "us-east-1a",
+          "tags": { "Name": "cloudnova-bloated-1" },
+          "vpc_security_group_ids": null,
+          "root_block_device": [
+            {
+              "volume_size": 100,
+              "volume_type": "gp3",
+              "encrypted": false,
+              "delete_on_termination": true
+            }
+          ],
+          "ebs_optimized": false,
+          "monitoring": false,
+          "tenancy": "default"
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "instance_state": true,
+          "primary_network_interface_id": true,
+          "private_dns": true,
+          "private_ip": true,
+          "public_dns": true,
+          "public_ip": true,
+          "subnet_id": true,
+          "vpc_security_group_ids": true
+        }
+      }
     },
     {
-      "address": "aws_db_instance.main",
+      "address": "aws_instance.overprovisioned[1]",
       "mode": "managed",
-      "type": "aws_db_instance",
-      "name": "main",
+      "type": "aws_instance",
+      "name": "overprovisioned",
+      "index": 1,
       "provider_name": "registry.terraform.io/hashicorp/aws",
-      "change": { "actions": ["create"], "before": null, "after": { "allocated_storage": 100, "instance_class": "db.t3.medium", "engine": "postgres" } }
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-0c55b159cbfafe1f0",
+          "instance_type": "m5.4xlarge",
+          "availability_zone": "us-east-1a",
+          "tags": { "Name": "cloudnova-bloated-2" },
+          "vpc_security_group_ids": null,
+          "root_block_device": [
+            {
+              "volume_size": 100,
+              "volume_type": "gp3",
+              "encrypted": false,
+              "delete_on_termination": true
+            }
+          ],
+          "ebs_optimized": false,
+          "monitoring": false,
+          "tenancy": "default"
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "instance_state": true,
+          "primary_network_interface_id": true,
+          "private_dns": true,
+          "private_ip": true,
+          "public_dns": true,
+          "public_ip": true,
+          "subnet_id": true,
+          "vpc_security_group_ids": true
+        }
+      }
     },
     {
-      "address": "aws_s3_bucket.storage",
+      "address": "aws_instance.overprovisioned[2]",
       "mode": "managed",
-      "type": "aws_s3_bucket",
-      "name": "storage",
+      "type": "aws_instance",
+      "name": "overprovisioned",
+      "index": 2,
       "provider_name": "registry.terraform.io/hashicorp/aws",
-      "change": { "actions": ["create"], "before": null, "after": { "bucket": "costnova-storage-staging" } }
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-0c55b159cbfafe1f0",
+          "instance_type": "m5.4xlarge",
+          "availability_zone": "us-east-1a",
+          "tags": { "Name": "cloudnova-bloated-3" },
+          "vpc_security_group_ids": null,
+          "root_block_device": [
+            {
+              "volume_size": 100,
+              "volume_type": "gp3",
+              "encrypted": false,
+              "delete_on_termination": true
+            }
+          ],
+          "ebs_optimized": false,
+          "monitoring": false,
+          "tenancy": "default"
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "instance_state": true,
+          "primary_network_interface_id": true,
+          "private_dns": true,
+          "private_ip": true,
+          "public_dns": true,
+          "public_ip": true,
+          "subnet_id": true,
+          "vpc_security_group_ids": true
+        }
+      }
     }
   ],
   "configuration": {
     "provider_config": {
-      "aws": { "name": "aws", "expressions": { "region": { "constant_value": "us-east-1" } } }
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0",
+        "expressions": {
+          "region": { "references": ["var.region"] }
+        }
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.overprovisioned",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "overprovisioned",
+          "provider_config_key": "aws",
+          "count_expression": { "references": ["var.instance_count"] }
+        },
+        {
+          "address": "aws_security_group.wide_open",
+          "mode": "managed",
+          "type": "aws_security_group",
+          "name": "wide_open",
+          "provider_config_key": "aws"
+        }
+      ],
+      "variables": {
+        "region": { "default": "us-east-1" },
+        "instance_type": { "default": "m5.4xlarge" },
+        "instance_count": { "default": 3 },
+        "ami_id": { "default": "" }
+      }
     }
   }
 }
