@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0",
+  "request_id": "714f1f14-6409-4828-8b2e-f2414795a770",
+  "status": "success",
+  "timestamp": "2026-03-11T08:27:26.632625+00:00",
+  "summary": {
+    "total_resources": 3,
+    "priced_resources": 2,
+    "failed_resources": 0,
+    "warned_resources": 1,
+    "total_monthly_cost": 36.21,
+    "total_hourly_cost": 0.0496,
+    "currency": "USD",
+    "warnings": [
+      "NO_METERS",
+      "STALE_CACHE"
+    ]
+  },
+  "decision": "ALLOW",
+  "resources": [
+    {
+      "resource_id": "azurerm_linux_virtual_machine.web",
+      "resource_type": "azurerm_linux_virtual_machine",
+      "provider": "azure",
+      "region": "eastus",
+      "monthly_cost": 35.65,
+      "hourly_cost": 0.0488,
+      "success": true,
+      "meters": [
+        {
+          "meter_type": "Instance usage (Standard_B2s, Linux)",
+          "quantity": 730.0,
+          "unit": "hours",
+          "unit_price_usd": 0.0416,
+          "monthly_usd": 30.368,
+          "product_id": "d07b38da-0b59-5e02-988a-714ed491ee2c",
+          "vendor_sku": "DZH318Z0BQ35/00J7"
+        },
+        {
+          "meter_type": "OS disk (Premium_LRS, 30.0 GB)",
+          "quantity": 1.0,
+          "unit": "1/Month",
+          "unit_price_usd": 5.2795,
+          "monthly_usd": 5.2795,
+          "product_id": "81415d94-0106-546f-80a1-f2f01305345e",
+          "vendor_sku": "DZH318Z0BP0W/007P"
+        }
+      ],
+      "warnings": [
+        {
+          "code": "STALE_CACHE",
+          "message": "price_cache data is 718h old (threshold: 192h)",
+          "cache_age_hours": 717.5
+        }
+      ]
+    },
+    {
+      "resource_id": "azurerm_postgresql_flexible_server.main",
+      "resource_type": "azurerm_postgresql_flexible_server",
+      "provider": "azure",
+      "region": "eastus",
+      "monthly_cost": 0.0,
+      "hourly_cost": 0.0,
+      "success": true,
+      "warnings": [
+        {
+          "code": "NO_METERS",
+          "message": "No resource definition or template for azurerm_postgresql_flexible_server",
+          "resource_type": "azurerm_postgresql_flexible_server"
+        }
+      ]
+    },
+    {
+      "resource_id": "azurerm_storage_account.storage",
+      "resource_type": "azurerm_storage_account",
+      "provider": "azure",
+      "region": "eastus",
+      "monthly_cost": 0.56,
+      "hourly_cost": 0.0008,
+      "success": true,
+      "meters": [
+        {
+          "meter_type": "Data stored (Hot, LRS)",
+          "quantity": 100.0,
+          "unit": "GB/month",
+          "unit_price_usd": 0.0052,
+          "monthly_usd": 0.52,
+          "product_id": "7e9ba493-37ba-5bd4-b160-9144971aefc3",
+          "vendor_sku": "DZH318Z0BP09/008P"
+        },
+        {
+          "meter_type": "Write operations (Hot)",
+          "quantity": 1.0,
+          "unit": "10K operations",
+          "unit_price_usd": 0.00325,
+          "monthly_usd": 0.00325,
+          "product_id": "c2c98ae4-18e3-5b75-8e9e-28c13811f789",
+          "vendor_sku": "DZH318Z0C120/004T"
+        },
+        {
+          "meter_type": "Read operations (Hot)",
+          "quantity": 10.0,
+          "unit": "10K operations",
+          "unit_price_usd": 0.004,
+          "monthly_usd": 0.04,
+          "product_id": "e9fe6d3b-7902-5ef0-8bce-680ca92baae0",
+          "vendor_sku": "DZH318Z0BNZJ/0058"
+        }
+      ],
+      "warnings": [
+        {
+          "code": "STALE_CACHE",
+          "message": "price_cache data is 718h old (threshold: 192h)",
+          "cache_age_hours": 717.5
+        }
+      ]
+    }
+  ],
+  "guardrails": {
+    "passed": true,
+    "decision": "ALLOW",
+    "alerts": [],
+    "summary": {
+      "rules_evaluated": 0,
+      "rules_passed": 0,
+      "rules_failed": 0,
+      "evaluation_duration_ms": 0,
+      "total_cost_evaluated": 0.0
+    }
+  },
+  "budget": {
+    "decision": "ALLOW",
+    "budget_id": "6",
+    "budget_name": "CloudScale Solutions January 2026 Budget",
+    "available_headroom": 441978.87,
+    "consumption_percentage": 55.8,
+    "estimated_cost": 36.21,
+    "headroom_after": 441942.66,
+    "approval_code": "CG-2026-D7D432D28D61",
+    "approval_expires_at": "2026-03-12T08:27:23.114254Z"
+  },
+  "narrative": {
+    "html": "<div>\n<p><strong>Summary:</strong> The analysis has determined that the current cloud resource usage is <strong>ALLOWED</strong>, with a total monthly cost of <strong>$36.21</strong>.</p>\n</div>\n\n<div>\n<p><strong>Top Cost Drivers:</strong></p>\n<ul>\n  <li>azurerm_linux_virtual_machine.web: <strong>$35.65</strong></li>\n  <li>azurerm_storage_account.storage: <strong>$0.56</strong></li>\n  <li>azurerm_postgresql_flexible_server.main: <strong>$0.00</strong></li>\n</ul>\n</div>\n\n<div>\n<p><strong>Recommendation:</strong> The analysis shows that the majority of the monthly cost is driven by the Linux virtual machine. Consider optimizing the VM size or exploring cost-effective alternatives to reduce the overall monthly spend.</p>\n</div>",
+    "fallback_used": false
+  },
+  "metadata": {
+    "pipeline_duration_ms": 4376,
+    "build_duration_ms": 0,
+    "client_ip": "52.73.184.173",
+    "api_key_hash": "a8204e49e7b48407",
+    "parse_duration_ms": 0,
+    "iac_format": "terraform"
+  }
+}
