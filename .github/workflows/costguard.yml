@@ -22,7 +22,7 @@ jobs:
         run: |
           pip install -q costguard-cli
           costguard-validate \
-            --plan terraform/azure-plan.json \
+            --plan costguard-block-result.json \
             --budget-code CS-FY2026-BU105-M03 \
             --format terminal \
             --post-comment \
