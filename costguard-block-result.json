@@ -1,0 +1,24 @@
+{
+  "budget_code": "TEST-BUD2026-12",
+  "decision": "BLOCK",
+  "total_monthly_cost": 98.93,
+  "budget_name": null,
+  "headroom": 0.0,
+  "resources": [
+    {
+      "name": "aws_instance.web",
+      "type": "aws_instance",
+      "monthly_cost": 32.77
+    },
+    {
+      "name": "aws_db_instance.main",
+      "type": "aws_db_instance",
+      "monthly_cost": 64.06
+    },
+    {
+      "name": "aws_s3_bucket.storage",
+      "type": "aws_s3_bucket",
+      "monthly_cost": 2.1
+    }
+  ]
+}
