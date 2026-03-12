@@ -1,0 +1,12 @@
+  cost-review:
+    needs: cfn-changeset           # your job that outputs changeset.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: changeset
+      - uses: buddypracticerepo1-stack/costguard-action@v1
+        with:
+          plan-path: changeset.json
+          api-key: ${{ secrets.COSTGUARD_API_KEY }}
+          budget-code: ${{ secrets.COSTGUARD_BUDGET_CODE }}
