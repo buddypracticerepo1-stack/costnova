@@ -1,5 +1,4 @@
-name: CostGuard Cost Review
-
+name: CostGuard
 on:
   pull_request:
     branches: [main]
@@ -9,33 +8,34 @@ permissions:
   pull-requests: write
 
 jobs:
-  costguard:
+  terraform-plan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: CostGuard Validation
-        env:
-          COSTGUARD_API_KEY: ${{ secrets.COSTGUARD_API_KEY }}
-          COSTGUARD_API_URL: ${{ secrets.COSTGUARD_API_URL }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pip install -q costguard-cli
-          costguard-validate \
-            --plan costguard-block-result.json \
-            --budget-code CS-FY2026-BU105-M03 \
-            --format terminal \
-            --post-comment \
-            --cache-path costguard-result.json
-          costguard-validate \
-            --cached costguard-result.json \
-            --format html \
-            --output-file costguard-report.html
-
-      - name: Upload Cost Report
-        uses: actions/upload-artifact@v4
-        if: always()
+      - uses: hashicorp/setup-terraform@v3
+      # Add your AWS credentials step here, e.g.:
+      # - uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      #     aws-region: us-east-1
+      - run: |
+          terraform init
+          terraform plan -out=tfplan
+          terraform show -json tfplan > plan.json
+      - uses: actions/upload-artifact@v4
         with:
-          name: costguard-report
-          path: costguard-report.html
-          retention-days: 30
+          name: plan
+          path: plan.json
+
+  cost-review:
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan
+      - uses: buddypracticerepo1-stack/costguard-action@v1
+        with:
+          plan-path: plan.json
+          api-key: ${{ secrets.COSTGUARD_API_KEY }}
+          budget-code: ${{ secrets.COSTGUARD_BUDGET_CODE }}
